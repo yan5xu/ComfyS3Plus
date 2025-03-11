@@ -127,7 +127,13 @@ class SaveImageWebpS3:
                     results.append({
                         "filename": file,
                         "subfolder": subfolder,
-                        "type": self.type
+                        "type": self.type,
+                        'key': file_path,
+                        'width': width,
+                        'height': height,
+                        'size': file_size,
+                        'type': 'png'
+
                     })
                     counter += 1
 
