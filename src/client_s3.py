@@ -88,10 +88,10 @@ class S3:
             err = f"Failed to download file from S3: {e}"
             logger.error(err)
 
-    def upload_file(self, local_path, s3_path):
+    def upload_file(self, local_path, s3_path, extra_args=None):
         try:
             bucket = self.s3_client.Bucket(self.bucket_name)
-            bucket.upload_file(local_path, s3_path)
+            bucket.upload_file(local_path, s3_path, ExtraArgs=extra_args)
             return s3_path
         except NoCredentialsError:
             err = "Credentials not available or not valid."
