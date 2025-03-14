@@ -90,28 +90,68 @@ class SaveImageWebpS3:
 
             # 设定最终存入图片的 metadata 为 None，避免 workflow 中的敏感信息泄漏
             metadata = None
-            file = f"{filename}_{counter:05}_.webp"
+            file = f"{filename}_{counter:05}_.png"
             temp_file = None
             try:
                 # Create a temporary file
                 with tempfile.NamedTemporaryFile(
-                    delete=False, suffix=".webp"
+                    delete=False, suffix=".png"
                 ) as temp_file:
                     temp_file_path = temp_file.name
 
-                    # Save the image to the temporary file
-                    img.save(temp_file_path, format="WEBP", quality=quality)
+                    # Save the image to the temporary file as PNG
+                    img.save(
+                        temp_file_path,
+                        format="PNG",
+                        pnginfo=metadata,
+                        compress_level=self.compress_level,
+                    )
 
-                    # Upload the temporary file to S3
+                    # 获取图片信息
+                    width, height = img.size
+                    file_size = os.path.getsize(temp_file_path)
+
+                    # 设置 S3 元数据
+                    extra_args = {
+                        "ContentType": "image/png",
+                        "Metadata": {
+                            "width": str(width),
+                            "height": str(height),
+                            "size": str(file_size),
+                            "type": "png",
+                        },
+                    }
+
+                    # Upload the temporary file to S3 with metadata
                     s3_path = os.path.join(full_output_folder, file)
-                    file_path = S3_INSTANCE.upload_file(temp_file_path, s3_path)
+                    file_path = S3_INSTANCE.upload_file(
+                        temp_file_path, s3_path, extra_args=extra_args
+                    )
+
+                    # 创建包含图片信息的结果
+                    image_info = {
+                        "key": file_path,
+                        "width": width,
+                        "height": height,
+                        "size": file_size,
+                        "type": "png",
+                    }
 
                     # Add the s3 path to the s3_image_paths list
-                    s3_image_paths.append(file_path)
+                    s3_image_paths.append(image_info)
 
                     # Add the result to the results list
                     results.append(
-                        {"filename": file, "subfolder": subfolder, "type": self.type}
+                        {
+                            "filename": file,
+                            "subfolder": subfolder,
+                            "type": self.type,
+                            "key": file_path,
+                            "width": width,
+                            "height": height,
+                            "size": file_size,
+                            "type": "png",
+                        }
                     )
                     counter += 1
 
