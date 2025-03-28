@@ -5,6 +5,7 @@ import numpy as np
 import time
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
+from colorthief import ColorThief
 from comfy.cli_args import args
 
 from ..client_s3 import get_s3_instance_plus
@@ -110,7 +111,8 @@ class SaveImageWebpS3:
                     # 获取图片信息
                     width, height = img.size
                     file_size = os.path.getsize(temp_file_path)
-
+                    color = ColorThief(temp_file_path).get_color(quality=quality)
+                    print(f"color: {color}")
                     # 设置 S3 元数据
                     extra_args = {
                         "ContentType": "image/png",
@@ -119,8 +121,10 @@ class SaveImageWebpS3:
                             "height": str(height),
                             "size": str(file_size),
                             "type": "png",
+                            "color": f"rgb({color[0]}, {color[1]}, {color[2]})",
                         },
                     }
+                    print(f"extra_args: {extra_args}")
 
                     # Upload the temporary file to S3 with metadata
                     s3_path = os.path.join(full_output_folder, file)
