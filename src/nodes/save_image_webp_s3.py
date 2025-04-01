@@ -111,8 +111,10 @@ class SaveImageWebpS3:
                     # 获取图片信息
                     width, height = img.size
                     file_size = os.path.getsize(temp_file_path)
-                    color = ColorThief(temp_file_path).get_color(quality=quality)
-                    print(f"color: {color}")
+                    color_thief = ColorThief(temp_file_path)
+                    color = color_thief.get_color(quality=1)
+                    hex_color = "#{:02X}{:02X}{:02X}".format(color[0], color[1], color[2])
+                    print(f"color: {hex_color}")
                     # 设置 S3 元数据
                     extra_args = {
                         "ContentType": "image/png",
@@ -121,7 +123,7 @@ class SaveImageWebpS3:
                             "height": str(height),
                             "size": str(file_size),
                             "type": "png",
-                            "color": f"rgb({color[0]}, {color[1]}, {color[2]})",
+                            "color": hex_color,
                         },
                     }
                     print(f"extra_args: {extra_args}")
